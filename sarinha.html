@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sistema Solar – Guia dos Planetas</title>
+<style>
+  :root{
+    --bg:#05070f; --panel:rgba(18,24,44,.72); --line:rgba(255,255,255,.09);
+    --txt:#e8ecf8; --mut:#9aa6c4; --acc:#ffb347;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;line-height:1.55}
+  #stars{position:fixed;inset:0;z-index:0;width:100%;height:100%}
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:28px 18px 60px}
+  header{text-align:center;margin-bottom:26px}
+  header h1{font-size:clamp(1.8rem,4.5vw,3rem);letter-spacing:.5px;background:linear-gradient(90deg,#ffd27a,#ff8a5c,#c58bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--mut);margin-top:6px}
+
+  /* seletor */
+  .nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:26px}
+  .nav button{display:flex;align-items:center;gap:8px;background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:9px 16px;border-radius:999px;cursor:pointer;font-size:.95rem;transition:.2s;backdrop-filter:blur(8px)}
+  .nav button:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.3)}
+  .nav button.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),0 0 22px -4px var(--acc);background:rgba(255,179,71,.12)}
+  .dot{width:14px;height:14px;border-radius:50%;display:inline-block}
+
+  /* painel principal */
+  .main{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:22px;align-items:start}
+  @media(max-width:860px){.main{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;backdrop-filter:blur(10px)}
+  .stage{display:flex;flex-direction:column;align-items:center;gap:16px;position:sticky;top:14px}
+  @media(max-width:860px){.stage{position:static}}
+  .orbit{height:320px;width:100%;display:flex;align-items:center;justify-content:center}
+  .planet-wrap{position:relative;display:flex;align-items:center;justify-content:center;animation:float 6s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-8px)}}
+  .planet{border-radius:50%;position:relative;overflow:hidden;box-shadow:inset -22px -14px 40px rgba(0,0,0,.65),0 0 50px -8px var(--glow,#fff)}
+  .planet::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.35),transparent 45%)}
+  .ring{position:absolute;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%) rotateX(72deg)}
+  .name{font-size:2rem;font-weight:700}
+  .tag{display:inline-block;font-size:.78rem;padding:3px 11px;border-radius:999px;border:1px solid var(--line);color:var(--mut);margin:2px}
+  .stage .row{text-align:center}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+  .quick div{background:rgba(255,255,255,.05);border-radius:12px;padding:10px 12px;text-align:center}
+  .quick small{display:block;color:var(--mut);font-size:.72rem;text-transform:uppercase;letter-spacing:.6px}
+  .quick b{font-size:1.02rem}
+
+  .info h2{font-size:1.1rem;color:var(--acc);margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .info section{margin-bottom:20px}
+  .desc{color:#cfd6ea;font-size:1.02rem}
+  table.kv{width:100%;border-collapse:collapse}
+  table.kv td{padding:8px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.kv td:first-child{color:var(--mut);width:48%}
+  table.kv tr:last-child td{border-bottom:none}
+  .bars .b{margin-bottom:10px}
+  .bars .t{display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:4px}
+  .bars .track{height:9px;background:rgba(255,255,255,.08);border-radius:9px;overflow:hidden}
+  .bars .fill{height:100%;border-radius:9px;background:linear-gradient(90deg,#ffb347,#ff6f61);width:0;transition:width .8s ease}
+  ul.list{padding-left:20px}
+  ul.list li{margin-bottom:7px;color:#cfd6ea}
+  .moons{display:flex;flex-wrap:wrap;gap:7px}
+  .moons span{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:.85rem}
+
+  /* comparação */
+  .compare{margin-top:34px}
+  .compare h2{margin-bottom:12px}
+  .scroll{overflow-x:auto;border-radius:14px}
+  table.cmp{width:100%;border-collapse:collapse;min-width:900px;font-size:.9rem}
+  table.cmp th,table.cmp td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.cmp th:first-child,table.cmp td:first-child{text-align:left;position:sticky;left:0;background:#0d1226}
+  table.cmp thead th{color:var(--acc);cursor:pointer;user-select:none;background:#0d1226}
+  table.cmp tbody tr{cursor:pointer;transition:.15s}
+  table.cmp tbody tr:hover{background:rgba(255,255,255,.05)}
+  table.cmp tbody tr.on td{background:rgba(255,179,71,.1)}
+  .hint{color:var(--mut);font-size:.82rem;margin-top:8px}
+  footer{text-align:center;color:var(--mut);font-size:.82rem;margin-top:30px}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="wrap">
+  <header>
+    <h1>🪐 Sistema Solar</h1>
+    <p>Explore os oito planetas: dados físicos, órbita, atmosfera, luas, missões e curiosidades.</p>
+  </header>
+
+  <nav class="nav" id="nav"></nav>
+
+  <div class="main">
+    <aside class="card stage">
+      <div class="orbit"><div class="planet-wrap" id="pwrap"></div></div>
+      <div class="row">
+        <div class="name" id="pname"></div>
+        <div id="ptags"></div>
+      </div>
+      <div class="quick" id="quick"></div>
+    </aside>
+
+    <div class="card info" id="info"></div>
+  </div>
+
+  <section class="card compare">
+    <h2 style="color:var(--acc)">📊 Comparação entre os planetas</h2>
+    <div class="scroll">
+      <table class="cmp" id="cmp"></table>
+    </div>
+    <p class="hint">Clique no cabeçalho para ordenar e em uma linha para abrir o planeta. Use as setas ← → do teclado para navegar.</p>
+  </section>
+
+  <footer>Dados baseados em fontes da NASA e da IAU. Valores aproximados; contagem de luas muda com novas descobertas.</footer>
+</div>
+
+<script>
+/* ===================== DADOS ===================== */
+const PLANETAS = [
+{
+  id:"mercurio", nome:"Mercúrio", tipo:"Rochoso (terrestre)", pos:1,
+  cores:["#c9c2b8","#8c8479","#5b554d"], glow:"#b9b0a2",
+  desc:"O menor planeta do Sistema Solar e o mais próximo do Sol. Sua superfície cheia de crateras lembra a da Lua. Quase sem atmosfera, ele sofre variações térmicas extremas entre o dia e a noite.",
+  massa:"3,301 × 10²³ kg", massaT:0.0553, diam:4879, raio:"2.439,7 km", dens:"5,427 g/cm³", grav:"3,7 m/s² (0,38 g)", escape:"4,25 km/s",
+  volume:"6,08 × 10¹⁰ km³ (0,056 Terra)", superficie:"7,48 × 10⁷ km²",
+  dist:"57,9 milhões km (0,387 UA)", distM:57.9, orbita:"87,97 dias terrestres", orbitaD:87.97, velOrb:"47,87 km/s", excent:"0,2056", incOrb:"7,00°",
+  rot:"58,65 dias (1.407,6 h)", rotH:1407.6, diaSolar:"176 dias terrestres", incAxial:"0,034°",
+  tMedia:"167 °C (média global)", tMin:"-173 °C", tMax:"427 °C", tMediaN:167,
+  atmDesc:"Exosfera extremamente tênue, formada por átomos arrancados da superfície pelo vento solar e pelo impacto de micrometeoritos. Não retém calor.",
+  atm:[["Oxigênio (O)",42],["Sódio (Na)",29],["Hidrogênio (H₂)",22],["Hélio (He)",6],["Potássio e outros",1]],
+  pressao:"~10⁻¹⁴ bar (praticamente vácuo)",
+  nLuas:0, luas:[], aneis:"Não possui", campo:"Sim, fraco (~1% do campo terrestre), gerado por núcleo metálico parcialmente líquido",
+  composicao:"Núcleo de ferro enorme (~85% do raio), manto de silicatos e crosta fina",
+  descoberta:"Conhecido desde a Antiguidade (observado por sumérios e babilônios)",
+  missoes:["Mariner 10 (NASA, 1974–75)","MESSENGER (NASA, órbita 2011–2015)","BepiColombo (ESA/JAXA, chegada à órbita prevista para 2026)"],
+  curiosidades:["Um ano em Mercúrio (88 dias) é mais curto que um dia solar (176 dias).","Possui gelo de água em crateras permanentemente sombreadas nos polos.","Está encolhendo lentamente à medida que seu núcleo esfria.","Mesmo sendo o mais próximo do Sol, não é o mais quente — Vênus é."]
+},
+{
+  id:"venus", nome:"Vênus", tipo:"Rochoso (terrestre)", pos:2,
+  cores:["#f3d9a0","#d9a85a","#9c6b2f"], glow:"#f0c070",
+  desc:"Quase um gêmeo da Terra em tamanho, mas com um efeito estufa descontrolado. Densas nuvens de ácido sulfúrico escondem uma superfície vulcânica, e é o planeta mais quente do Sistema Solar.",
+  massa:"4,867 × 10²⁴ kg", massaT:0.815, diam:12104, raio:"6.051,8 km", dens:"5,243 g/cm³", grav:"8,87 m/s² (0,90 g)", escape:"10,36 km/s",
+  volume:"9,28 × 10¹¹ km³ (0,857 Terra)", superficie:"4,60 × 10⁸ km²",
+  dist:"108,2 milhões km (0,723 UA)", distM:108.2, orbita:"224,7 dias terrestres", orbitaD:224.7, velOrb:"35,02 km/s", excent:"0,0068", incOrb:"3,39°",
+  rot:"243 dias (retrógrada, 5.832,5 h)", rotH:5832.5, diaSolar:"116,75 dias terrestres", incAxial:"177,4° (gira ao contrário)",
+  tMedia:"464 °C (média global)", tMin:"~437 °C", tMax:"~475 °C", tMediaN:464,
+  atmDesc:"Atmosfera muito densa e pesada, com nuvens de ácido sulfúrico. A pressão na superfície equivale a estar ~900 m sob o oceano. Ventos de até 360 km/h na alta atmosfera (superrotação).",
+  atm:[["Dióxido de carbono (CO₂)",96.5],["Nitrogênio (N₂)",3.5],["Dióxido de enxofre (SO₂)",0.015],["Argônio e outros",0.007]],
+  pressao:"92 bar (~92× a da Terra)",
+  nLuas:0, luas:[], aneis:"Não possui", campo:"Sem campo magnético intrínseco; possui magnetosfera induzida pela interação com o vento solar",
+  composicao:"Núcleo de ferro/níquel, manto rochoso e crosta basáltica com vulcões e planícies de lava",
+  descoberta:"Conhecida desde a Antiguidade (“Estrela d’Alva”)",
+  missoes:["Venera e Vega (URSS, 1960s–80s)","Magellan (NASA, mapeamento por radar, 1990–94)","Venus Express (ESA, 2006–2014)","Akatsuki (JAXA, 2015–2024)"],
+  curiosidades:["Gira no sentido contrário ao da maioria dos planetas: o Sol nasce no oeste.","Seu dia (243 dias) é mais longo que seu ano (225 dias).","É o astro mais brilhante do céu noturno depois da Lua.","Possui mais vulcões do que qualquer outro planeta do Sistema Solar."]
+},
+{
+  id:"terra", nome:"Terra", tipo:"Rochoso (terrestre)", pos:3,
+  cores:["#7ec4ff","#2b79d1","#1f8a4c"], glow:"#6db6ff",
+  desc:"O nosso lar e o único mundo conhecido que abriga vida. Possui água líquida em abundância, atmosfera rica em oxigênio, campo magnético protetor e placas tectônicas ativas.",
+  massa:"5,972 × 10²⁴ kg", massaT:1, diam:12742, raio:"6.371 km (equatorial: 6.378 km)", dens:"5,514 g/cm³ (a maior do sistema)", grav:"9,81 m/s² (1 g)", escape:"11,19 km/s",
+  volume:"1,083 × 10¹² km³", superficie:"5,10 × 10⁸ km² (71% de água)",
+  dist:"149,6 milhões km (1 UA)", distM:149.6, orbita:"365,25 dias", orbitaD:365.25, velOrb:"29,78 km/s", excent:"0,0167", incOrb:"0° (plano de referência)",
+  rot:"23 h 56 min (23,93 h)", rotH:23.93, diaSolar:"24 horas", incAxial:"23,44°",
+  tMedia:"15 °C (média global)", tMin:"-89,2 °C (Antártida)", tMax:"56,7 °C (Vale da Morte)", tMediaN:15,
+  atmDesc:"Atmosfera em camadas (troposfera, estratosfera, mesosfera, termosfera e exosfera), com camada de ozônio que filtra a radiação ultravioleta e vapor d'água variável.",
+  atm:[["Nitrogênio (N₂)",78.08],["Oxigênio (O₂)",20.95],["Argônio (Ar)",0.93],["Dióxido de carbono (CO₂)",0.042],["Vapor d'água (variável)",1]],
+  pressao:"1,013 bar (nível do mar)",
+  nLuas:1, luas:["Lua"], aneis:"Não possui", campo:"Sim, forte (~25–65 µT), gerado pelo núcleo externo líquido; forma a magnetosfera",
+  composicao:"Núcleo interno sólido e externo líquido (ferro/níquel), manto silicático e crosta dividida em placas tectônicas",
+  descoberta:"—  (planeta de origem da humanidade; forma esférica demonstrada na Grécia Antiga)",
+  missoes:["Apollo 8 e demais missões tripuladas (primeiras imagens “Earthrise”)","Landsat, Terra, Aqua e outros satélites de observação","Estação Espacial Internacional (órbita terrestre baixa)"],
+  curiosidades:["É o único planeta do Sistema Solar que não recebeu nome de uma divindade.","A idade estimada é de cerca de 4,54 bilhões de anos.","A Lua estabiliza a inclinação do eixo e gera as marés.","É o planeta mais denso do Sistema Solar."]
+},
+{
+  id:"marte", nome:"Marte", tipo:"Rochoso (terrestre)", pos:4,
+  cores:["#f0a07a","#c1502e","#7a2e1a"], glow:"#e0704a",
+  desc:"O “Planeta Vermelho” deve sua cor ao óxido de ferro. Abriga o maior vulcão (Monte Olimpo) e o maior cânion (Valles Marineris) do Sistema Solar, além de evidências de antigos rios e lagos.",
+  massa:"6,417 × 10²³ kg", massaT:0.107, diam:6779, raio:"3.389,5 km", dens:"3,933 g/cm³", grav:"3,71 m/s² (0,38 g)", escape:"5,03 km/s",
+  volume:"1,63 × 10¹¹ km³ (0,151 Terra)", superficie:"1,45 × 10⁸ km²",
+  dist:"227,9 milhões km (1,524 UA)", distM:227.9, orbita:"687 dias (1,88 ano terrestre)", orbitaD:687, velOrb:"24,07 km/s", excent:"0,0934", incOrb:"1,85°",
+  rot:"24 h 37 min (24,62 h)", rotH:24.62, diaSolar:"24 h 39 min (1 sol)", incAxial:"25,19°",
+  tMedia:"-65 °C (média global)", tMin:"-140 °C", tMax:"20 °C", tMediaN:-65,
+  atmDesc:"Atmosfera fina e fria, dominada por CO₂. Tempestades de poeira podem cobrir o planeta inteiro. O céu diurno é de cor salmão e o pôr do sol é azulado.",
+  atm:[["Dióxido de carbono (CO₂)",95],["Nitrogênio (N₂)",2.8],["Argônio (Ar)",2],["Oxigênio (O₂)",0.17],["Monóxido de carbono (CO)",0.08]],
+  pressao:"~0,006 bar (~0,6% da Terra)",
+  nLuas:2, luas:["Fobos","Deimos"], aneis:"Não possui (Fobos pode se fragmentar e formar um anel no futuro)", campo:"Sem campo global; apenas campos magnéticos remanescentes na crosta",
+  composicao:"Núcleo de ferro/enxofre, manto de silicatos e crosta basáltica coberta por poeira de óxido de ferro",
+  descoberta:"Conhecido desde a Antiguidade; luas descobertas por Asaph Hall em 1877",
+  missoes:["Viking 1 e 2 (NASA, 1976)","Curiosity (NASA, desde 2012)","Perseverance e helicóptero Ingenuity (NASA, desde 2021)","Tianwen-1 / Zhurong (China, 2021)","Mars Express (ESA) e orbitadores diversos"],
+  curiosidades:["Monte Olimpo tem ~22 km de altura — cerca de 2,5× o Everest.","Possui calotas polares de gelo de água e CO₂.","Um dia marciano (sol) é quase igual ao dia terrestre.","Fobos orbita tão perto que nasce no oeste e se põe no leste duas vezes por dia."]
+},
+{
+  id:"jupiter", nome:"Júpiter", tipo:"Gigante gasoso", pos:5,
+  cores:["#f2dcc0","#c99b6d","#8f5a3a"], glow:"#d9a672", bandas:true,
+  desc:"O maior planeta do Sistema Solar: sua massa é mais que o dobro da soma de todos os outros planetas. Faixas de nuvens e a gigantesca Grande Mancha Vermelha — uma tempestade com séculos de duração — marcam sua aparência.",
+  massa:"1,898 × 10²⁷ kg", massaT:317.8, diam:139820, raio:"69.911 km", dens:"1,326 g/cm³", grav:"24,79 m/s² (2,53 g)", escape:"59,5 km/s",
+  volume:"1,43 × 10¹⁵ km³ (1.321 Terras)", superficie:"6,22 × 10¹⁰ km²",
+  dist:"778,5 milhões km (5,203 UA)", distM:778.5, orbita:"11,86 anos (4.333 dias)", orbitaD:4333, velOrb:"13,07 km/s", excent:"0,0489", incOrb:"1,30°",
+  rot:"9 h 56 min (9,93 h)", rotH:9.93, diaSolar:"~9 h 56 min", incAxial:"3,13°",
+  tMedia:"-110 °C (no nível de 1 bar)", tMin:"-145 °C (topo das nuvens)", tMax:"~24.000 °C (núcleo, estimado)", tMediaN:-110,
+  atmDesc:"Atmosfera espessa de hidrogênio e hélio, com nuvens de amônia, hidrossulfeto de amônio e água organizadas em faixas. Ventos chegam a 600 km/h e há tempestades e relâmpagos gigantes.",
+  atm:[["Hidrogênio (H₂)",89.8],["Hélio (He)",10.2],["Metano (CH₄)",0.3],["Amônia (NH₃)",0.026],["Vapor d'água e outros",0.01]],
+  pressao:"Sem superfície sólida (1 bar no topo das nuvens; milhões de bar no interior)",
+  nLuas:95, luas:["Io","Europa","Ganimedes","Calisto","Amalteia","Himalia","e mais de 90 outras"], aneis:"Sim — sistema de anéis tênues e escuros (4 componentes principais)", campo:"Extremamente forte (~14× o da Terra na superfície); a maior magnetosfera do sistema",
+  composicao:"Hidrogênio metálico líquido em grande parte do interior; possível núcleo rochoso/difuso",
+  descoberta:"Conhecido desde a Antiguidade; quatro luas galileanas observadas por Galileu em 1610",
+  missoes:["Pioneer 10/11 e Voyager 1/2 (sobrevoos, 1970s)","Galileo (NASA, órbita 1995–2003)","Juno (NASA, órbita desde 2016)","Europa Clipper (NASA, chegada prevista em 2030) e JUICE (ESA)"],
+  curiosidades:["A Grande Mancha Vermelha é maior que a Terra, mas vem encolhendo.","Io é o corpo com maior atividade vulcânica do Sistema Solar.","Europa possui um oceano de água líquida sob a crosta de gelo.","Emite mais calor interno do que recebe do Sol."]
+},
+{
+  id:"saturno", nome:"Saturno", tipo:"Gigante gasoso", pos:6,
+  cores:["#f4e3b8","#d6b676","#9b7b45"], glow:"#e3c37f", bandas:true, aneis:true,
+  desc:"Famoso por seu espetacular sistema de anéis, composto principalmente de gelo de água. É o planeta menos denso: sua densidade é menor que a da água, de modo que “flutuaria” em um oceano suficientemente grande.",
+  massa:"5,683 × 10²⁶ kg", massaT:95.16, diam:116460, raio:"58.232 km", dens:"0,687 g/cm³ (menor que a água)", grav:"10,44 m/s² (1,07 g)", escape:"35,5 km/s",
+  volume:"8,27 × 10¹⁴ km³ (764 Terras)", superficie:"4,27 × 10¹⁰ km²",
+  dist:"1,434 bilhão km (9,537 UA)", distM:1433.5, orbita:"29,46 anos (10.759 dias)", orbitaD:10759, velOrb:"9,69 km/s", excent:"0,0565", incOrb:"2,49°",
+  rot:"10 h 33 min (10,7 h)", rotH:10.7, diaSolar:"~10 h 33 min", incAxial:"26,73°",
+  tMedia:"-140 °C (no nível de 1 bar)", tMin:"-178 °C (topo das nuvens)", tMax:"~11.700 °C (núcleo, estimado)", tMediaN:-140,
+  atmDesc:"Composta basicamente de hidrogênio e hélio, com nuvens de amônia. Ventos de até 1.800 km/h no equador e uma tempestade hexagonal persistente no polo norte.",
+  atm:[["Hidrogênio (H₂)",96.3],["Hélio (He)",3.25],["Metano (CH₄)",0.45],["Amônia, etano e outros",0.01]],
+  pressao:"Sem superfície sólida (1 bar no topo das nuvens)",
+  nLuas:274, luas:["Titã","Reia","Jápeto","Dione","Tétis","Encélado","Mimas","Hipérion","Febe","e centenas de outras"], aneis:"Sim — sistema principal e mais extenso (anéis A, B, C, D, E, F, G), com ~282.000 km de diâmetro e poucas dezenas de metros de espessura", campo:"Forte (~0,6 G no equador), quase perfeitamente alinhado ao eixo de rotação",
+  composicao:"Hidrogênio metálico líquido no interior e núcleo rochoso/gelado",
+  descoberta:"Conhecido desde a Antiguidade; anéis observados por Galileu (1610) e interpretados por Huygens (1655)",
+  missoes:["Pioneer 11 e Voyager 1/2 (sobrevoos, 1979–81)","Cassini–Huygens (NASA/ESA/ASI, 2004–2017; sonda Huygens pousou em Titã em 2005)","Dragonfly (NASA, drone para Titã, lançamento previsto 2028)"],
+  curiosidades:["Titã é a única lua do Sistema Solar com atmosfera densa e lagos de metano líquido.","Encélado lança jatos de vapor de água de um oceano subterrâneo.","Seus anéis podem ter apenas algumas centenas de milhões de anos.","Os anéis parecem “desaparecer” a cada ~15 anos, quando ficam de perfil para a Terra."]
+},
+{
+  id:"urano", nome:"Urano", tipo:"Gigante de gelo", pos:7,
+  cores:["#d3f4f6","#8fd6dd","#5aa7b5"], glow:"#8fe0e8", aneis:"fino",
+  desc:"O planeta “deitado”: seu eixo de rotação é inclinado quase 98°, de modo que ele gira praticamente de lado. É um gigante de gelo de cor azul-esverdeada, devido ao metano na atmosfera.",
+  massa:"8,681 × 10²⁵ kg", massaT:14.54, diam:50724, raio:"25.362 km", dens:"1,27 g/cm³", grav:"8,69 m/s² (0,89 g)", escape:"21,3 km/s",
+  volume:"6,83 × 10¹³ km³ (63 Terras)", superficie:"8,08 × 10⁹ km²",
+  dist:"2,871 bilhões km (19,19 UA)", distM:2872.5, orbita:"84,01 anos (30.687 dias)", orbitaD:30687, velOrb:"6,80 km/s", excent:"0,0457", incOrb:"0,77°",
+  rot:"17 h 14 min (retrógrada, 17,24 h)", rotH:17.24, diaSolar:"~17 h 14 min", incAxial:"97,77°",
+  tMedia:"-195 °C (no nível de 1 bar)", tMin:"-224 °C (a menor registrada em planetas)", tMax:"~4.700 °C (núcleo, estimado)", tMediaN:-195,
+  atmDesc:"Atmosfera de hidrogênio, hélio e metano; o metano absorve a luz vermelha e confere a cor ciano. Possui nuvens de gelo de metano e é a atmosfera planetária mais fria conhecida.",
+  atm:[["Hidrogênio (H₂)",82.5],["Hélio (He)",15.2],["Metano (CH₄)",2.3],["Hidreto de deutério e outros",0.01]],
+  pressao:"Sem superfície sólida (1 bar no topo das nuvens)",
+  nLuas:28, luas:["Titânia","Oberon","Umbriel","Ariel","Miranda","Puck","Portia","e outras"], aneis:"Sim — 13 anéis estreitos e escuros", campo:"Inclinado ~59° em relação ao eixo e deslocado do centro; formato irregular",
+  composicao:"Manto de “gelos” (água, amônia e metano) sob alta pressão e pequeno núcleo rochoso",
+  descoberta:"13 de março de 1781, por William Herschel (primeiro planeta descoberto com telescópio)",
+  missoes:["Voyager 2 (NASA, único sobrevoo, 1986)","Uranus Orbiter and Probe (proposta prioritária da comunidade científica)"],
+  curiosidades:["Cada polo recebe ~42 anos de luz solar contínua seguidos de ~42 anos de escuridão.","Foi originalmente chamado de “Georgium Sidus” por Herschel.","As luas recebem nomes de personagens de Shakespeare e Alexander Pope.","Emite pouco calor interno em comparação com os outros gigantes."]
+},
+{
+  id:"netuno", nome:"Netuno", tipo:"Gigante de gelo", pos:8,
+  cores:["#8fb4ff","#3f66e0","#1d2f8f"], glow:"#4f7bff", aneis:"fino",
+  desc:"O planeta mais distante do Sol e o de ventos mais rápidos, com tempestades de até ~2.100 km/h. Foi o primeiro planeta localizado por previsão matemática antes de ser observado.",
+  massa:"1,024 × 10²⁶ kg", massaT:17.15, diam:49244, raio:"24.622 km", dens:"1,638 g/cm³", grav:"11,15 m/s² (1,14 g)", escape:"23,5 km/s",
+  volume:"6,25 × 10¹³ km³ (57 Terras)", superficie:"7,62 × 10⁹ km²",
+  dist:"4,495 bilhões km (30,07 UA)", distM:4495, orbita:"164,8 anos (60.190 dias)", orbitaD:60190, velOrb:"5,43 km/s", excent:"0,0113", incOrb:"1,77°",
+  rot:"16 h 06 min (16,11 h)", rotH:16.11, diaSolar:"~16 h 06 min", incAxial:"28,32°",
+  tMedia:"-201 °C (no nível de 1 bar)", tMin:"-218 °C", tMax:"~5.100 °C (núcleo, estimado)", tMediaN:-201,
+  atmDesc:"Atmosfera de hidrogênio, hélio e metano, com nuvens brilhantes de gelo de metano e a famosa Grande Mancha Escura (tempestade que já desapareceu e reapareceu). Emite cerca de 2,6× mais energia do que recebe do Sol.",
+  atm:[["Hidrogênio (H₂)",80],["Hélio (He)",19],["Metano (CH₄)",1.5],["Etano, acetileno e outros",0.01]],
+  pressao:"Sem superfície sólida (1 bar no topo das nuvens)",
+  nLuas:16, luas:["Tritão","Nereida","Proteu","Náiade","Talassa","Despina","Galateia","Larissa","e outras"], aneis:"Sim — 5 anéis principais (Galle, Le Verrier, Lassell, Arago e Adams), com arcos de poeira", campo:"Inclinado ~47° em relação ao eixo e deslocado do centro",
+  composicao:"Manto de gelos de água, amônia e metano e núcleo rochoso do tamanho aproximado da Terra",
+  descoberta:"23 de setembro de 1846, por Johann Galle, a partir dos cálculos de Urbain Le Verrier (e John Couch Adams)",
+  missoes:["Voyager 2 (NASA, único sobrevoo, 1989)"],
+  curiosidades:["Ainda não completou uma órbita desde sua descoberta (isso ocorreu em 2011).","Tritão orbita em sentido retrógrado e é provavelmente um objeto capturado do Cinturão de Kuiper.","Tritão possui gêiseres de nitrogênio e é um dos corpos mais frios do sistema (~-235 °C).","Os ventos mais fortes do Sistema Solar foram medidos aqui."]
+}
+];
+
+/* ===================== ESTADO / RENDER ===================== */
+let atual = 0;
+const $ = s => document.querySelector(s);
+const grad = p => `radial-gradient(circle at 35% 30%, ${p.cores[0]}, ${p.cores[1]} 55%, ${p.cores[2]})`;
+const fmt = n => n.toLocaleString("pt-BR");
+
+function nav(){
+  $("#nav").innerHTML = PLANETAS.map((p,i)=>
+    `<button data-i="${i}" class="${i===atual?'on':''}"><span class="dot" style="background:${grad(p)}"></span>${p.pos}. ${p.nome}</button>`
+  ).join("");
+  document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>sel(+b.dataset.i));
+}
+
+function planetaVisual(p){
+  const base = 70, max = 250;
+  const tam = Math.round(base + (Math.log(p.diam/4879)/Math.log(139820/4879))*(max-base));
+  let html = `<div class="planet" style="width:${tam}px;height:${tam}px;background:${grad(p)};--glow:${p.glow}">`;
+  if(p.bandas){
+    html += `<div style="position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,.12) 0 6%,rgba(0,0,0,.12) 6% 12%,rgba(120,70,30,.14) 12% 17%)"></div>`;
+  }
+  if(p.id==="jupiter"){
+    html += `<div style="position:absolute;left:55%;top:58%;width:${tam*.2}px;height:${tam*.12}px;background:#b5472f;border-radius:50%;opacity:.85;filter:blur(1px)"></div>`;
+  }
+  if(p.id==="terra"){
+    html += `<div style="position:absolute;left:18%;top:22%;width:${tam*.3}px;height:${tam*.25}px;background:#2e9e57;border-radius:45% 55% 40% 60%;opacity:.9"></div>
+             <div style="position:absolute;left:56%;top:48%;width:${tam*.28}px;height:${tam*.3}px;background:#35a860;border-radius:55% 45% 60% 40%;opacity:.9"></div>
+             <div style="position:absolute;left:30%;top:0;width:${tam*.4}px;height:${tam*.08}px;background:#fff;border-radius:50%;opacity:.8"></div>`;
+  }
+  if(p.id==="marte"){
+    html += `<div style="position:absolute;left:35%;top:0;width:${tam*.3}px;height:${tam*.09}px;background:#fff;border-radius:50%;opacity:.8"></div>`;
+  }
+  html += `</div>`;
+  if(p.aneis===true){
+    html += `<div class="ring" style="width:${tam*2.3}px;height:${tam*2.3}px;border:${tam*.1}px solid rgba(220,190,130,.55);box-shadow:0 0 0 ${tam*.05}px rgba(220,190,130,.3),inset 0 0 0 ${tam*.04}px rgba(180,150,100,.5)"></div>`;
+  } else if(p.aneis==="fino"){
+    html += `<div class="ring" style="width:${tam*1.9}px;height:${tam*1.9}px;border:2px solid rgba(255,255,255,.35)"></div>`;
+  }
+  return html;
+}
+
+function kv(rows){
+  return `<table class="kv">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>`;
+}
+
+function render(){
+  const p = PLANETAS[atual];
+  $("#pwrap").innerHTML = planetaVisual(p);
+  $("#pname").textContent = p.nome;
+  $("#ptags").innerHTML = `<span class="tag">${p.tipo}</span><span class="tag">${p.pos}º do Sol</span><span class="tag">${p.nLuas} ${p.nLuas===1?'lua':'luas'}</span>`;
+  $("#quick").innerHTML = [
+    ["Massa",p.massa],["Diâmetro",fmt(p.diam)+" km"],["Gravidade",p.grav.split(" (")[0]],["Dist. do Sol",p.dist.split(" (")[0]],
+    ["Ano",p.orbita.split(" (")[0]],["Temp. média",p.tMedia.split(" (")[0]]
+  ].map(x=>`<div><small>${x[0]}</small><b>${x[1]}</b></div>`).join("");
+
+  const bars = p.atm.map(a=>`
+    <div class="b"><div class="t"><span>${a[0]}</span><span>${String(a[1]).replace(".",",")}%</span></div>
+    <div class="track"><div class="fill" data-w="${Math.max(a[1],0.8)}"></div></div></div>`).join("");
+
+  $("#info").innerHTML = `
+    <section><h2>📖 Visão geral</h2><p class="desc">${p.desc}</p></section>
+    <section><h2>⚖️ Características físicas</h2>${kv([
+      ["Massa",`${p.massa} (${String(p.massaT).replace(".",",")} × Terra)`],
+      ["Diâmetro médio",fmt(p.diam)+" km"],["Raio médio",p.raio],["Volume",p.volume],["Área da superfície",p.superficie],
+      ["Densidade média",p.dens],["Gravidade na superfície",p.grav],["Velocidade de escape",p.escape],["Composição interna",p.composicao]
+    ])}</section>
+    <section><h2>🛰️ Órbita e rotação</h2>${kv([
+      ["Distância média do Sol",p.dist],["Período orbital (ano)",p.orbita],["Velocidade orbital média",p.velOrb],
+      ["Excentricidade orbital",p.excent],["Inclinação orbital",p.incOrb],["Período de rotação",p.rot],
+      ["Duração do dia solar",p.diaSolar],["Inclinação do eixo",p.incAxial]
+    ])}</section>
+    <section><h2>🌡️ Temperatura</h2>${kv([
+      ["Média",p.tMedia],["Mínima",p.tMin],["Máxima",p.tMax]
+    ])}</section>
+    <section class="bars"><h2>☁️ Atmosfera</h2>
+      <p class="desc" style="margin-bottom:12px">${p.atmDesc}</p>
+      ${bars}
+      <p style="margin-top:8px;color:var(--mut);font-size:.9rem">Pressão atmosférica: <b style="color:var(--txt)">${p.pressao}</b></p>
+    </section>
+    <section><h2>🌙 Luas e anéis</h2>
+      ${kv([["Número de luas",p.nLuas],["Anéis",p.aneis],["Campo magnético",p.campo]])}
+      ${p.luas.length?`<div class="moons" style="margin-top:12px">${p.luas.map(l=>`<span>${l}</span>`).join("")}</div>`:""}
+    </section>
+    <section><h2>🔭 Descoberta</h2><p class="desc">${p.descoberta}</p></section>
+    <section><h2>🚀 Missões espaciais</h2><ul class="list">${p.missoes.map(m=>`<li>${m}</li>`).join("")}</ul></section>
+    <section><h2>✨ Curiosidades</h2><ul class="list">${p.curiosidades.map(c=>`<li>${c}</li>`).join("")}</ul></section>
+  `;
+  requestAnimationFrame(()=>setTimeout(()=>{
+    document.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%");
+  },30));
+  nav();
+  document.querySelectorAll("#cmp tbody tr").forEach(tr=>tr.classList.toggle("on",+tr.dataset.i===atual));
+}
+
+function sel(i){ atual=(i+PLANETAS.length)%PLANETAS.length; render(); window.scrollTo({top:0,behavior:"smooth"}); }
+
+/* ===================== TABELA COMPARATIVA ===================== */
+const COLS = [
+  ["Planeta",p=>p.nome,"nome"],
+  ["Tipo",p=>p.tipo,"tipo"],
+  ["Massa (× Terra)",p=>String(p.massaT).replace(".",","),"massaT"],
+  ["Diâmetro (km)",p=>fmt(p.diam),"diam"],
+  ["Dist. Sol (mi km)",p=>fmt(p.distM),"distM"],
+  ["Ano (dias)",p=>fmt(p.orbitaD),"orbitaD"],
+  ["Rotação (h)",p=>fmt(p.rotH),"rotH"],
+  ["Temp. média (°C)",p=>p.tMediaN,"tMediaN"],
+  ["Luas",p=>p.nLuas,"nLuas"]
+];
+let ordem = {k:"pos",asc:true};
+function tabela(){
+  const lista = [...PLANETAS].sort((a,b)=>{
+    const x=a[ordem.k], y=b[ordem.k];
+    const r = typeof x==="string" ? x.localeCompare(y,"pt") : x-y;
+    return ordem.asc ? r : -r;
+  });
+  $("#cmp").innerHTML = `<thead><tr>${COLS.map(c=>`<th data-k="${c[2]}">${c[0]}${ordem.k===c[2]?(ordem.asc?" ▲":" ▼"):""}</th>`).join("")}</tr></thead>
+  <tbody>${lista.map(p=>`<tr data-i="${PLANETAS.indexOf(p)}">${COLS.map(c=>`<td>${c[1](p)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  document.querySelectorAll("#cmp th").forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k; ordem = {k, asc: ordem.k===k ? !ordem.asc : true}; tabela(); render();
+  });
+  document.querySelectorAll("#cmp tbody tr").forEach(tr=>tr.onclick=()=>sel(+tr.dataset.i));
+}
+
+/* ===================== ESTRELAS ===================== */
+(function(){
+  const c=$("#stars"), x=c.getContext("2d"); let S=[];
+  function init(){
+    c.width=innerWidth; c.height=innerHeight;
+    S=Array.from({length:Math.round(c.width*c.height/5500)},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.3+.2,t:Math.random()*6.28,v:Math.random()*.02+.005}));
+  }
+  function loop(){
+    x.clearRect(0,0,c.width,c.height);
+    for(const s of S){ s.t+=s.v; x.globalAlpha=.4+.6*Math.abs(Math.sin(s.t)); x.fillStyle="#fff"; x.beginPath(); x.arc(s.x,s.y,s.r,0,6.283); x.fill(); }
+    requestAnimationFrame(loop);
+  }
+  addEventListener("resize",init); init(); loop();
+})();
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight") sel(atual+1);
+  if(e.key==="ArrowLeft") sel(atual-1);
+});
+
+tabela(); render();
+</script>
+</body>
+</html>
