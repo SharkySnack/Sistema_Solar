@@ -100,6 +100,8 @@
   .planet-wrap{width:100%;height:100%;max-width:440px;touch-action:none}
   .planet-canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
   .planet-canvas:active{cursor:grabbing}
+  .texture-status{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);padding:4px 9px;border-radius:4px;background:rgba(7,11,18,.8);color:var(--mut);font-size:.72rem;text-align:center;white-space:nowrap;pointer-events:none}
+  .texture-status.error{color:#ffd27a}
   .planet{flex:none}
   .name{font-family:Georgia,"Times New Roman",serif;font-size:2.1rem}
   .quick{gap:8px}
@@ -167,7 +169,7 @@
 
   <div class="main">
     <aside class="card stage">
-      <div class="orbit"><div class="planet-wrap" id="pwrap"></div></div>
+      <div class="orbit"><div class="planet-wrap" id="pwrap"></div><span class="texture-status" id="textureStatus" aria-live="polite" hidden></span></div>
       <div class="row">
         <div class="name" id="pname"></div>
         <div id="ptags"></div>
@@ -395,7 +397,8 @@ const grad = p => `radial-gradient(circle at 35% 30%, ${p.cores[0]}, ${p.cores[1
 const fmt = n => n.toLocaleString("pt-BR");
 const loader = new THREE.TextureLoader();
 const cacheTexturas = new Map();
-let rendererPlaneta, cenaPlaneta, cameraPlaneta, grupoPlaneta, esferaPlaneta, nuvensPlaneta, aneisPlaneta;
+const pedidosTexturas = new Map();
+let rendererPlaneta, cenaPlaneta, cameraPlaneta, grupoPlaneta, esferaPlaneta, nuvensPlaneta, aneisPlaneta, luzAmbientePlaneta, luzDirecionalPlaneta;
 let arrastando = false, ponteiroAnterior = {x:0,y:0}, velocidadeRotacao = {x:0,y:0};
 
 function nav(){
@@ -422,10 +425,11 @@ function iniciarGlobo(){
   rendererPlaneta=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
   rendererPlaneta.setPixelRatio(Math.min(devicePixelRatio||1,2));
   rendererPlaneta.outputEncoding=THREE.sRGBEncoding;
-  cenaPlaneta.add(new THREE.AmbientLight(0x9aa9bd,.8));
-  const luz=new THREE.DirectionalLight(0xfff0d7,2.2);
-  luz.position.set(-3,2,4);
-  cenaPlaneta.add(luz);
+  luzAmbientePlaneta=new THREE.AmbientLight(0x9aa9bd,.8);
+  cenaPlaneta.add(luzAmbientePlaneta);
+  luzDirecionalPlaneta=new THREE.DirectionalLight(0xfff0d7,2.2);
+  luzDirecionalPlaneta.position.set(-3,2,4);
+  cenaPlaneta.add(luzDirecionalPlaneta);
 
   grupoPlaneta=new THREE.Group();
   cenaPlaneta.add(grupoPlaneta);
@@ -482,28 +486,54 @@ function iniciarGlobo(){
   desenhar();
 }
 
-function carregarTextura(nome,aoCarregar){
+function carregarTextura(nome,aoCarregar,aoFalhar=()=>{}){
   if(cacheTexturas.has(nome)){aoCarregar(cacheTexturas.get(nome));return;}
-  loader.load(BASE_TEXTURAS+nome,textura=>{
-    textura.encoding=THREE.sRGBEncoding;
-    cacheTexturas.set(nome,textura);
-    aoCarregar(textura);
-  },undefined,()=>{});
+  if(!pedidosTexturas.has(nome)){
+    const pedido=new Promise((resolve,reject)=>{
+      loader.load(BASE_TEXTURAS+nome,resolve,undefined,reject);
+    }).then(textura=>{
+      textura.encoding=THREE.sRGBEncoding;
+      cacheTexturas.set(nome,textura);
+      return textura;
+    }).catch(erro=>{
+      pedidosTexturas.delete(nome);
+      throw erro;
+    });
+    pedidosTexturas.set(nome,pedido);
+  }
+  pedidosTexturas.get(nome).then(aoCarregar,aoFalhar);
+}
+
+function mostrarEstadoTextura(mensagem,erro=false){
+  const estado=$("#textureStatus");
+  estado.textContent=mensagem;
+  estado.hidden=!mensagem;
+  estado.classList.toggle("error",erro);
 }
 
 function atualizarGlobo(p){
   if(!rendererPlaneta)iniciarGlobo();
+  luzAmbientePlaneta.intensity=.8;
+  luzDirecionalPlaneta.intensity=2.2;
   cameraPlaneta.position.z=p.id==="saturno"?5.05:p.id==="sol"?4.05:4.25;
-  esferaPlaneta.material.color.set(0xffffff);
+  esferaPlaneta.material.color.set(p.cores[1]);
   esferaPlaneta.material.emissive.set(p.id==="sol"?0xff9638:0x000000);
   esferaPlaneta.material.emissiveIntensity=p.id==="sol"?.45:0;
   esferaPlaneta.material.map=null;
   esferaPlaneta.material.needsUpdate=true;
+  mostrarEstadoTextura(cacheTexturas.has(TEXTURAS[p.id])?"":"Carregando textura...");
   carregarTextura(TEXTURAS[p.id],textura=>{
     if(PLANETAS[atual].id!==p.id)return;
     esferaPlaneta.material.map=textura;
     esferaPlaneta.material.color.set(0xffffff);
     esferaPlaneta.material.needsUpdate=true;
+    mostrarEstadoTextura("");
+  },()=>{
+    if(PLANETAS[atual].id!==p.id)return;
+    luzAmbientePlaneta.intensity=.12;
+    luzDirecionalPlaneta.intensity=.35;
+    esferaPlaneta.material.color.set(p.cores[1]);
+    mostrarEstadoTextura("Textura indisponível; exibindo globo simplificado.",true);
   });
 
   if(aneisPlaneta){
